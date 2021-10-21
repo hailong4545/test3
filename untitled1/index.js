@@ -2,7 +2,8 @@ const express = require('express')
 const app = express();
 
 const server = require("http").createServer(app);
-const { Server } = require('socket.io')
+
+const { Server } = require('socket.io',  {transports: ['websocket']});
 
 const io = new Server(server);
 
