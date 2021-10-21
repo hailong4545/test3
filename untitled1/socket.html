@@ -82,7 +82,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
+    var socket = io('http://localhost:3000', { transports: ['websocket'] });
 
     const formHome = document.querySelector('.form');
     const tagName = document.querySelector('input[name="name"]')
