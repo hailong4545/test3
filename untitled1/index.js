@@ -35,4 +35,4 @@ io.on('connection', (socket) => {
     })
 })
 
-server.listen(3000, "https://test4-neon.vercel.app/");
+server.listen(3000);
