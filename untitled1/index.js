@@ -34,5 +34,5 @@ io.on('connection', (socket) => {
         }
     })
 })
-
-server.listen("","https://test311.vercel.app/");
+var port = process.env.PORT || 3000;
+server.listen(port);
