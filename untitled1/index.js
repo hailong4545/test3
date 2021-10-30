@@ -34,5 +34,7 @@ io.on('connection', (socket) => {
         }
     })
 })
-// var port = 3000;
-app.listen(port);
+
+var port = process.env.PORT || 3000;
+
+server.listen(port);
