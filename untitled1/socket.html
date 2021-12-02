@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Title</title>
+  <title>Bán đinh 3</title>
   <style>
     .Game {
       display: flex;
@@ -19,6 +19,18 @@
       font-size:20px;
       font-weight: bold;
     }
+
+    .toast {
+      border: 1px solid black;
+      width: fit-content;
+      padding: 10px;
+      margin-top: 15px;
+    }
+
+    .deal {
+      max-width: 180px;
+    }
+
   </style>
 </head>
 <body>
@@ -31,32 +43,45 @@
     <button id="btn-submit">Submit</button>
   </div>
   <div class="controller" style="display: none">
-    <h1 style="text-align: center;">Bài bán đinh 3</h1>
+    <h1 style="text-align: center;">Bài bán đinh 3<p>Tháng thứ <span id="month">1</span></p></h1>
     <div class="Game">
       <div class="asset">
         <br>
-        <span>Tài sản hiện có : <span>0</span></span><br><br>
-        <span>Nhà máy : <span>0</span></span><br><br>
-        <span>Hàng tồn kho : <span>0</span></span><br><br>
-        <span>Tiền mặt : <span>100000000</span></span><br><br>
-        <span>Nợ ngân hàng : <span>0</span></span><br><br>
-        <span>Tiền gửi ngân hàng : <span>0</span></span><br><br>
-        <span>Có thể vay : <span>0</span></span><br><br>
+        <span>Nhà máy : <span id="nhaMay">0</span></span><br><br>
+        <span>Nhà phân phối : <span id="nhaPhanPhoi">0</span></span><br><br>
+        <span>Hàng tồn kho : <span id="hangTonKho">0</span></span><br><br>
+        <span>Tiền mặt : <span id="tienMat">100000000</span></span><br><br>
+        <span>Khoản tiền bán luôn : <span id="tienBanLuon">0</span></span><br><br>
+        <span>Khoản tiền bán chịu : <span id="tienBanChiu">0</span></span><br><br>
+        <span>Nợ ngân hàng : <span id="noNganHang">0</span></span><br><br>
+        <span>Tiền gửi ngân hàng : <span id="guiNganHang">0</span></span><br><br>
+        <span>Tiền có thể vay : <span id="tienCoTheVay">0</span></span><br><br>
       </div>
       <div class="build">
         <span>Xây nhà máy</span><br>
         <input type="text" value="" name="XayNhaMay" placeholder=""><br><br>
         <span>Xây nhà phân phối</span><br>
         <input type="text" value="" name="XayNhaPP" placeholder=""><br><br>
-        <span>Bán Đinh</span><br>
-        <input type="text" value="" name="banDinh" placeholder=""><br><br>
         <span>Sản xuất Đinh</span><br>
         <input type="text" value="" name="sxDinh" placeholder=""><br><br>
+        <span>Gửi ngân hàng</span><br>
+        <input type="text" value="" name="GNH" placeholder=""><br><br>
+        <span>Rút tiền ngân hàng</span><br>
+        <input type="text" value="" name="RNH" placeholder=""><br><br>
         <span>Trả nợ ngân hàng</span><br>
         <input type="text" value="" name="TNNH" placeholder=""><br><br>
         <span>Vay ngân hàng</span><br>
         <input type="text" value="" name="VNH" placeholder=""><br><br>
         <button id="btn-build">Thực Hiện</button>
+      </div>
+      <div class="sale" style="display: none;">
+        <span>Số đinh bán luôn max : <span id="maxSoDinhBanLuon">0</span></span><br>
+        <span>Số đinh bán chịu max : <span id="maxSoDinhBanChiu">0</span></span><br><br>
+        <span>Số đinh bán luôn</span><br>
+        <input type="text" value="" name="dinhBanLuon" placeholder=""><br><br>
+        <span>Số đinh bán chịu</span><br>
+        <input type="text" value="" name="dinhBanChiu" placeholder=""><br><br>
+        <button id="btn-sale">Thực Hiện</button><br>
       </div>
       <div class="exchange">
         <span>Tên</span><br>
@@ -81,9 +106,9 @@
   <button id="next" style="display: none;">Next Turn</button>
 
   <script src="https://socketio12311.herokuapp.com/socket.io/socket.io.js"></script>
-<!--   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script> -->
   <script>
     const socket = io.connect('https://socketio12311.herokuapp.com/');
+
     const formHome = document.querySelector('.form');
     const tagName = document.querySelector('input[name="name"]')
     const tagToken = document.querySelector('#token');
@@ -94,28 +119,143 @@
 
     const countNhaMay = document.querySelector('input[name="XayNhaMay"]');
     const countNhaPP = document.querySelector('input[name="XayNhaPP"]');
-    const countBanDinh = document.querySelector('input[name="banDinh"]');
     const countSxDinh = document.querySelector('input[name="sxDinh"]');
     const TNNH= document.querySelector('input[name="TNNH"]');
     const VNH = document.querySelector('input[name="VNH"]');
+    const GNH= document.querySelector('input[name="GNH"]');
+    const RNH = document.querySelector('input[name="RNH"]');
+
+    const nhaMay = document.querySelector('#nhaMay');
+    const nhaPhanPhoi = document.querySelector('#nhaPhanPhoi');
+    const tienMat = document.querySelector('#tienMat');
+    const tienNoNganHang = document.querySelector('#noNganHang');
+    const tienGuiNganHang = document.querySelector('#guiNganHang');
+    const tienBanLuon = document.querySelector('#tienBanLuon');
+    const tienBanChiu = document.querySelector('#tienBanChiu');
+    const tienCoTheVay = document.querySelector('#tienCoTheVay');
+    const hangTonKho = document.querySelector('#hangTonKho');
+
+    const dinhBanLuon = document.querySelector('input[name="dinhBanLuon"]');
+    const dinhBanChiu = document.querySelector('input[name="dinhBanChiu"]');
+
+    const maxSoDinhBanLuon = document.querySelector('#maxSoDinhBanLuon');
+    const maxSoDinhBanChiu = document.querySelector('#maxSoDinhBanChiu');
 
     const selectExchangeName = document.querySelector('#exchangeName');
+    const btnBuild = document.querySelector('#btn-build');
+    const btnSale = document.querySelector('#btn-sale');
 
     var name = "";
     var token = "";
-
-
-    var nhaMay = 90000000;
-    var nhaPhanPhoi = 8000000;
-    var sxDinh = 10000;
-    var banDinh = 20000;
-    var nganHang = 0.05;
-    var tienMat = 100000000;
+    const month = document.querySelector('#month');
 
     const sendRequest = document.querySelector('#btn-send-req');
     const action = document.querySelector('#action');
     const tagPrice = document.querySelector('input[name="price"]');
     const countExchange = document.querySelector('input[name="count"]');
+
+
+    const convert = (tag) => {
+      let value = tag.value;
+
+      if (typeof value == 'undefined') {
+        value = tag.innerText;
+      }
+
+      if (value == '') {
+        return 0;
+      }
+      else {
+        return parseFloat(value);
+      }
+    }
+
+    function reset_build() {
+      countNhaMay.value = '';
+      countSxDinh.value = '';
+      countNhaPP.value = '';
+      VNH.value = '';
+      TNNH.value = '';
+      RNH.value = '';
+      GNH.value = '';
+      document.querySelector('.build').style.display = 'none';
+      document.querySelector('.sale').style.display = 'block';
+    }
+
+    function change_infor_after_build() {
+      tienMat.innerText = convert(tienMat) + convert(VNH) + convert(RNH) - convert(countNhaMay) * 90000000 - convert(countNhaPP) * 8000000 - convert(countSxDinh) * 10000 - convert(TNNH) - convert(GNH)
+      nhaMay.innerText = convert(nhaMay) + convert(countNhaMay);
+      nhaPhanPhoi.innerHTML = convert(nhaPhanPhoi) + convert(countNhaPP);
+      hangTonKho.innerText = convert(hangTonKho) + convert(countSxDinh);
+      tienNoNganHang.innerText = convert(tienNoNganHang) + convert(VNH) - convert(TNNH);
+      tienGuiNganHang.innerText = convert(tienGuiNganHang) + convert(GNH) - convert(RNH);
+    }
+
+    function random() {
+      maxSoDinhBanChiu.innerText = Math.floor(Math.random() * parseInt(convert(nhaPhanPhoi) * 150) / 10) * 10;
+      maxSoDinhBanLuon.innerText = Math.floor(Math.random() * parseInt(convert(nhaPhanPhoi) * 150) / 10) * 10 + 100;
+    }
+
+    function reset_sale() {
+      dinhBanChiu.value = '';
+      dinhBanLuon.value = '';
+    }
+
+    function reset_next_month() {
+      tienMat.innerText = convert(tienMat) + 0.05 * convert(tienGuiNganHang) - 0.05 * convert(tienNoNganHang) + convert(tienBanChiu)
+      tienBanLuon.innerText = tienBanChiu.innerText;
+      tienBanChiu.innerText = 0;
+      tienCoTheVay.innerText = 0.5*(convert(nhaMay) * 90000000+convert(nhaPhanPhoi) * 8000000);
+      document.querySelector('.build').style.display = 'block';
+      document.querySelector('.sale').style.display = 'none';
+      reset_sale();
+      month.innerText = convert(month) + 1;
+
+    }
+    function change_infor_after_sale() {
+      tienBanChiu.innerText = convert(tienBanChiu) + convert(dinhBanChiu) * 20000;
+      tienBanLuon.innerText = convert(tienBanLuon) + convert(dinhBanLuon) * 20000;
+    }
+
+    btnBuild.onclick = () => {
+      if (convert(countNhaMay) * 90000000 + convert(countNhaPP) * 8000000 + convert(countSxDinh) * 10000 + convert(TNNH) + convert(GNH) > convert(tienMat) + convert(RNH) + convert(VNH)) {
+
+      }
+      else if (convert(VNH) + convert(tienNoNganHang) > convert(tienCoTheVay)) {
+
+      }
+      else if (convert(countSxDinh) > (convert(nhaMay) + convert(countNhaMay)) * 1000) {
+
+      }
+      else {
+        change_infor_after_build();
+        reset_build();
+        random();
+      }
+    }
+
+    btnSale.onclick = () => {
+      if (convert(dinhBanChiu) > convert(maxSoDinhBanChiu) || convert(dinhBanLuon) > convert(maxSoDinhBanLuon)) {
+
+      }
+      else if (convert(dinhBanLuon) + convert(dinhBanChiu) > convert(hangTonKho)) {
+
+      }
+      else {
+        change_infor_after_sale();
+        reset_sale();
+      }
+    }
+
+    function toast(name, action, price, count) {
+      return `<div class='deal' style="width: fit-content; margin-top: 15px;">
+        <span class='deal' style="font-weight:600">${name} cần ${action} ${count} đinh với giá ${price}
+          <button class='btn yes'>YES</button>
+          <button class='btn no'>NO</button>
+        </span>
+    </div>`;
+    }
+
 
 
     socket.on('render', (data) => {
@@ -128,14 +268,80 @@
     })
 
     socket.on('recive-request', (data) => {
-      var flag = window.confirm(`${data.name} đã gửi yêu cầu ${data.action} ${data.count} đinh với giá ${data.price}`);
-      if (flag) {
-        console.log('jiji');
-      }
-      else {
-        console.log('hhi');
+      document.querySelector('.sale').innerHTML += toast(data.userSend, data.action, data.price, data.count);
+      console.log('1');
+      const btnToast = document.querySelectorAll('.btn');
+      for(let i = 0; i < btnToast.length; i++) {
+        btnToast[i].addEventListener('click', (e) => {
+          console.log(btnToast[i].innerText);
+          if (btnToast[i].innerText == 'YES') {
+            let text = e.path[1].innerText.split(' ');
+            let dataAccept = {userSend: text[0], userRecive: name, action: text[2], price: parseFloat(text[7]), count: parseFloat(text[3])};
+            if (dataAccept.action == 'sell') {
+              if (convert(tienMat) >= dataAccept.price * dataAccept.count) {
+                socket.emit('accept-request', dataAccept);
+              }
+            }
+            else {
+              if (convert(hangTonKho) >= dataAccept.count) {
+                socket.emit('accept-request', dataAccept);
+              }
+            }
+          }
+          e.path[2].remove();
+        })
       }
     });
+
+    socket.on('accept-request', (dataAccept) => {
+      if (action == 'buy') {
+        if (convert(tienMat) >= dataAccept.price * dataAccept.count) {
+          socket.emit('accept-request suss', dataAccept);
+        }
+      }
+      else {
+        if (convert(hangTonKho) >= dataAccept.count) {
+          socket.emit('accept-request suss', dataAccept);
+        }
+      }
+    })
+
+    socket.on('accept-request suss', (dataAccept) => {
+      if (dataAccept.userSend == name) {
+        if (dataAccept.action == 'buy') {
+          tienMat.innerText = convert(tienMat) - dataAccept.price * dataAccept.count;
+          hangTonKho.innerText = convert(hangTonKho) + dataAccept.count;
+        }
+        else {
+          tienMat.innerText = convert(tienMat) + dataAccept.price * dataAccept.count;
+          hangTonKho.innerText = convert(hangTonKho) - dataAccept.count;
+        }
+      }
+      else {
+        if (dataAccept.action != 'buy') {
+          tienMat.innerText = convert(tienMat) - dataAccept.price * dataAccept.count;
+          hangTonKho.innerText = convert(hangTonKho) + dataAccept.count;
+        }
+        else {
+          tienMat.innerText = convert(tienMat) + dataAccept.price * dataAccept.count;
+          hangTonKho.innerText = convert(hangTonKho) - dataAccept.count;
+        }
+      }
+    })
+
+    socket.on('next_month', (data) => {
+      reset_next_month();
+    })
+
+    socket.on('notifi', (data) => {
+      let listOption = selectExchangeName.querySelectorAll('option');
+      for(let i = 0; i < listOption.length; i++) {
+        if (listOption[i].value == data) {
+          listOption[i].remove();
+          break;
+        }
+      }
+    })
 
     btnSubmit.onclick = (e) => {
       name = tagName.value;
@@ -150,10 +356,17 @@
     };
 
     sendRequest.onclick = (e) => {
-      let inforExchange = {name: selectExchangeName.value, action: action.value, count: countExchange.value, price: tagPrice.value};
-      console.log('hihi');
-      socket.emit('send-request', inforExchange);
+      if (action.value == 'sell') {
+        if (convert(countExchange) > 0 && convert(countExchange) <= convert(hangTonKho)) {
+          let inforExchange = {userSend: name, userRecive: selectExchangeName.value, action: action.value, count: convert(countExchange), price: convert(tagPrice)};
+          socket.emit('send-request', inforExchange);
+        }
+      }
     };
+
+    nextController.onclick = (e) => {
+      socket.emit('next_month', 1);
+    }
   </script>
 </body>
 </html>
