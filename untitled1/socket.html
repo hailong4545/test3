@@ -29,6 +29,7 @@
 
     .deal {
       max-width: 180px;
+      margin-top: 10px;
     }
 
   </style>
@@ -75,13 +76,16 @@
         <button id="btn-build">Thực Hiện</button>
       </div>
       <div class="sale" style="display: none;">
-        <span>Số đinh bán luôn max : <span id="maxSoDinhBanLuon">0</span></span><br>
-        <span>Số đinh bán chịu max : <span id="maxSoDinhBanChiu">0</span></span><br><br>
-        <span>Số đinh bán luôn</span><br>
-        <input type="text" value="" name="dinhBanLuon" placeholder=""><br><br>
-        <span>Số đinh bán chịu</span><br>
-        <input type="text" value="" name="dinhBanChiu" placeholder=""><br><br>
-        <button id="btn-sale">Thực Hiện</button><br>
+        <div>
+          <span>Số đinh bán luôn max : <span id="maxSoDinhBanLuon">0</span></span><br>
+          <span>Số đinh bán chịu max : <span id="maxSoDinhBanChiu">0</span></span><br><br>
+          <span>Số đinh bán luôn</span><br>
+          <input type="text" value="" name="dinhBanLuon" placeholder=""><br><br>
+          <span>Số đinh bán chịu</span><br>
+          <input type="text" value="" name="dinhBanChiu" placeholder=""><br><br>
+          <button id="btn-sale">Thực Hiện</button><br>
+        </div>
+        <div class="append-toast"></div>
       </div>
       <div class="exchange">
         <span>Tên</span><br>
@@ -105,9 +109,9 @@
 
   <button id="next" style="display: none;">Next Turn</button>
 
-  <script src="https://socketio12311.herokuapp.com/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io.connect('https://socketio12311.herokuapp.com/');
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript">
+    const socket = io();
 
     const formHome = document.querySelector('.form');
     const tagName = document.querySelector('input[name="name"]')
@@ -166,7 +170,12 @@
         return 0;
       }
       else {
-        return parseFloat(value);
+        let ans = parseInt(value);
+        if (String(ans) == 'NaN') {
+          return 0;
+        }
+
+        return parseInt(value);
       }
     }
 
@@ -201,20 +210,30 @@
       dinhBanLuon.value = '';
     }
 
+    function reset_exchange() {
+      tagPrice.value = '';
+      countExchange.value = '';
+    }
+
     function reset_next_month() {
-      tienMat.innerText = convert(tienMat) + 0.05 * convert(tienGuiNganHang) - 0.05 * convert(tienNoNganHang) + convert(tienBanChiu)
+      tienMat.innerText = convert(tienMat) + 0.05 * convert(tienGuiNganHang) - 0.05 * convert(tienNoNganHang) + convert(tienBanLuon);
       tienBanLuon.innerText = tienBanChiu.innerText;
       tienBanChiu.innerText = 0;
       tienCoTheVay.innerText = 0.5*(convert(nhaMay) * 90000000+convert(nhaPhanPhoi) * 8000000);
+
       document.querySelector('.build').style.display = 'block';
       document.querySelector('.sale').style.display = 'none';
-      reset_sale();
-      month.innerText = convert(month) + 1;
+      document.querySelector('.append-toast').innerHTML = '';
 
+      reset_sale();
+      reset_exchange();
+      month.innerText = convert(month) + 1;
     }
+
     function change_infor_after_sale() {
       tienBanChiu.innerText = convert(tienBanChiu) + convert(dinhBanChiu) * 20000;
       tienBanLuon.innerText = convert(tienBanLuon) + convert(dinhBanLuon) * 20000;
+      hangTonKho.innerText = convert(hangTonKho) - convert(dinhBanLuon) - convert(dinhBanChiu);
     }
 
     btnBuild.onclick = () => {
@@ -227,33 +246,76 @@
       else if (convert(countSxDinh) > (convert(nhaMay) + convert(countNhaMay)) * 1000) {
 
       }
+      else if (convert(countNhaMay) < 0 || convert(countNhaPP) < 0 || convert(countSxDinh) < 0 || convert(TNNH) < 0 || convert(VNH) < 0 || convert(RNH) < 0 || convert(GNH) < 0 ) {
+
+      }
       else {
+        console.log(5);
         change_infor_after_build();
         reset_build();
         random();
       }
     }
 
-    btnSale.onclick = () => {
+    btnSale.addEventListener('click', () => {
+      console.log(convert(dinhBanChiu));
+      console.log(convert(dinhBanLuon));
+      console.log(convert(hangTonKho));
+
       if (convert(dinhBanChiu) > convert(maxSoDinhBanChiu) || convert(dinhBanLuon) > convert(maxSoDinhBanLuon)) {
 
       }
       else if (convert(dinhBanLuon) + convert(dinhBanChiu) > convert(hangTonKho)) {
 
       }
+      else if (convert(dinhBanLuon) < 0 || convert(dinhBanChiu) < 0) {
+
+      }
       else {
+        maxSoDinhBanLuon.innerText = convert(maxSoDinhBanLuon) - convert(dinhBanLuon);
+        maxSoDinhBanChiu.innerText = convert(maxSoDinhBanChiu) - convert(dinhBanChiu);
         change_infor_after_sale();
         reset_sale();
       }
+    })
+
+    function btnToast() {
+      console.log(this.parentElement);
+      if (this.innerText == 'YES') {
+        let parent = this.parentElement;
+        let text = parent.innerText.split(' ');
+        let dataAccept = {userSend: text[0], userRecive: name, action: text[2], price: parseInt(text[7]), count: parseInt(text[3])};
+        if (dataAccept.action == 'sell') {
+          if (convert(tienMat) >= dataAccept.price * dataAccept.count) {
+            socket.emit('accept-request', dataAccept);
+          }
+        }
+        else {
+          if (convert(hangTonKho) >= dataAccept.count) {
+            socket.emit('accept-request', dataAccept);
+          }
+        }
+      }
+      this.parentElement.parentElement.remove();
     }
 
     function toast(name, action, price, count) {
-      return `<div class='deal' style="width: fit-content; margin-top: 15px;">
-        <span class='deal' style="font-weight:600">${name} cần ${action} ${count} đinh với giá ${price}
-          <button class='btn yes'>YES</button>
-          <button class='btn no'>NO</button>
-        </span>
-    </div>`;
+      let eleToast = document.createElement('div');
+      eleToast.className = 'deal';
+      let eleToastContent = document.createElement('span');
+      eleToastContent.innerText = `${name} cần ${action} ${count} đinh với giá ${price}`;
+      let btnYes = document.createElement('button');
+      btnYes.className = 'btn yes';
+      btnYes.innerText = 'YES';
+      btnYes.addEventListener('click', btnToast);
+      let btnNo = document.createElement('button');
+      btnNo.className = 'btn no';
+      btnNo.innerText = 'NO';
+      btnNo.addEventListener('click', btnToast);
+      eleToastContent.appendChild(btnYes);
+      eleToastContent.appendChild(btnNo);
+      eleToast.appendChild(eleToastContent);
+      return eleToast;
     }
 
 
@@ -268,29 +330,7 @@
     })
 
     socket.on('recive-request', (data) => {
-      document.querySelector('.sale').innerHTML += toast(data.userSend, data.action, data.price, data.count);
-      console.log('1');
-      const btnToast = document.querySelectorAll('.btn');
-      for(let i = 0; i < btnToast.length; i++) {
-        btnToast[i].addEventListener('click', (e) => {
-          console.log(btnToast[i].innerText);
-          if (btnToast[i].innerText == 'YES') {
-            let text = e.path[1].innerText.split(' ');
-            let dataAccept = {userSend: text[0], userRecive: name, action: text[2], price: parseFloat(text[7]), count: parseFloat(text[3])};
-            if (dataAccept.action == 'sell') {
-              if (convert(tienMat) >= dataAccept.price * dataAccept.count) {
-                socket.emit('accept-request', dataAccept);
-              }
-            }
-            else {
-              if (convert(hangTonKho) >= dataAccept.count) {
-                socket.emit('accept-request', dataAccept);
-              }
-            }
-          }
-          e.path[2].remove();
-        })
-      }
+      document.querySelector('.append-toast').appendChild(toast(data.userSend, data.action, data.price, data.count));
     });
 
     socket.on('accept-request', (dataAccept) => {
@@ -358,6 +398,12 @@
     sendRequest.onclick = (e) => {
       if (action.value == 'sell') {
         if (convert(countExchange) > 0 && convert(countExchange) <= convert(hangTonKho)) {
+          let inforExchange = {userSend: name, userRecive: selectExchangeName.value, action: action.value, count: convert(countExchange), price: convert(tagPrice)};
+          socket.emit('send-request', inforExchange);
+        }
+      }
+      else {
+        if (convert(tienMat) > convert(countExchange) * convert(tagPrice)) {
           let inforExchange = {userSend: name, userRecive: selectExchangeName.value, action: action.value, count: convert(countExchange), price: convert(tagPrice)};
           socket.emit('send-request', inforExchange);
         }
