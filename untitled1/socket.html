@@ -334,7 +334,7 @@
     });
 
     socket.on('accept-request', (dataAccept) => {
-      if (action == 'buy') {
+      if (dataAccept.action == 'buy') {
         if (convert(tienMat) >= dataAccept.price * dataAccept.count) {
           socket.emit('accept-request suss', dataAccept);
         }
